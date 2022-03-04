@@ -1,3 +1,3 @@
 #include <stdio.h>
 
-int helloWorld(char * name);
+int helloWorld(const char * name);
