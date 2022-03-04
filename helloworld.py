@@ -2,9 +2,9 @@
 
 from ctypes import *
 
-so_file = "./helloworld.so"
-so_functions = CDLL(so_file)
+so_functions = CDLL("./libhelloworld.so")
 
 print(type(so_functions))
-so_functions.helloWorld(b"Paul")
- 
+ret = so_functions.helloWorld(b"Paul")
+
+print(ret)
