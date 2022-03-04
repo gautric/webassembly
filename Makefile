@@ -14,6 +14,11 @@ CLANG=${WASMTIME_SDK}/bin/clang
 CSOURCE=$(SOURCE:=.c)
 PDFOBJECT=$(SOURCE:=.pdf)
 
+LD_LIBRARY_PATH=${PWD}
+
+# docker run -ti -v `pwd`:/app ubuntu  /bin/bash
+# apt-get update && apt-get install -y build-essential  python3.9 
+
 all: staticlib staticmain dynamiclib  
 
 clean: 
@@ -28,18 +33,15 @@ staticlib: objlib
 staticmain: staticlib helloworld-main.c
 	gcc -Wall -o staticmain helloworld-main.c helloworld-lib.a
 
-dynamiclib: 
-	gcc -c -fPIC helloworld-lib.c
-#	gcc helloworld-lib.o -fPIC -shared -o helloworld.so
-	gcc -shared -Wl,-soname,libhelloworld.so -o libhelloworld.so helloworld-lib.o
-#	nm -D  libhelloworld.so
-
+dynamiclib: 	
+	gcc -c -Wall -Werror -fPIC helloworld-lib.c
+	gcc -shared -o libhelloworld.so helloworld-lib.o
+	
 dynamicmain: dynamiclib
-#	gcc -Wall -L -o dynamicmain helloworld-main.c 
-#	LD_LIBRARY_PATH=${PWD} gcc -L -v helloworld-main.c -lhelloworld -o dynamicmain
+	gcc -L. -Wall -o dynamicmain helloworld-main.c -lhelloworld
 
-	LD_LIBRARY_PATH=${PWD} gcc  -fPIC  -I. -L. -lhelloworld helloworld-main.c  -o dynamicmain
+dynamicrun: dynamicmain
+	./dynamicmain
 
-# docker run -ti -v `pwd`:/app ubuntu  /bin/bash
-# apt-get update && apt-get install -y build-essential  python3.9 
-
+python: dynamiclib
+	python3.9 helloworld.py 
