@@ -1,5 +1,6 @@
 #include "helloworld-lib.h"
 
 int main() {
-    helloWorld("paul");
+    int ret = helloWorld("paul");
+    printf("%d\n", ret);
 }
