@@ -12,6 +12,7 @@ PDFOBJECT=$(SOURCE:=.pdf)
 
 BUILD_DIR=build
 DIST_DIR=dist
+SRC_DIR=src
 
 ifeq ($(shell uname -s),Darwin)
 	WASI_SDK_PATH=${HOME}/Source/wasm/wasi-sdk-14.0
@@ -42,14 +43,14 @@ check: staticrun dynamicrun noderun pythonrun wasmtimerun httplib
 clean: 
 	rm -rf *.a *.o *.so *.wasm staticmain dynamicmain main $(BUILD_DIR) $(DIST_DIR)
 
-objlib: helloworld-lib.c helloworld-lib.h mkdir
-	@$(CC) -Wall -c helloworld-lib.c -o $(BUILD_DIR)/helloworld-lib.o
+objlib: $(SRC_DIR)/helloworld-lib.c $(SRC_DIR)/helloworld-lib.h mkdir
+	@$(CC) -Wall -c $(SRC_DIR)/helloworld-lib.c -o $(BUILD_DIR)/helloworld-lib.o
 
 staticlib: objlib
 	@$(AR) -cvq $(BUILD_DIR)/helloworld-lib.a $(BUILD_DIR)/helloworld-lib.o
 
-staticmain: staticlib helloworld-main.c mkdir
-	@$(CC) -Wall  helloworld-main.c $(BUILD_DIR)/helloworld-lib.a -o $(DIST_DIR)/staticmain
+staticmain: staticlib $(SRC_DIR)/helloworld-main.c mkdir
+	@$(CC) -Wall  $(SRC_DIR)/helloworld-main.c $(BUILD_DIR)/helloworld-lib.a -o $(DIST_DIR)/staticmain
 
 staticrun: staticmain
 	@echo "********** RUN static "
@@ -57,12 +58,12 @@ staticrun: staticmain
 	@echo "********** END static "
 
 #https://www.cprogramming.com/tutorial/shared-libraries-linux-gcc.html
-dynamiclib: helloworld-lib.c helloworld-lib.h helloworld-main.c
-	@$(CC) -c -Wall -Werror -fPIC helloworld-lib.c
+dynamiclib: $(SRC_DIR)/helloworld-lib.c $(SRC_DIR)/helloworld-lib.h $(SRC_DIR)/helloworld-main.c
+	@$(CC) -c -Wall -Werror -fPIC $(SRC_DIR)/helloworld-lib.c
 	@$(CC) -shared  $(BUILD_DIR)/helloworld-lib.o -o $(DIST_DIR)/libhelloworld.so
 	
 dynamicmain: dynamiclib mkdir
-	@$(CC) -L$(DIST_DIR) -Wall -o $(DIST_DIR)/dynamicmain helloworld-main.c -lhelloworld
+	@$(CC) -L$(DIST_DIR) -Wall -o $(DIST_DIR)/dynamicmain $(SRC_DIR)/helloworld-main.c -lhelloworld
 
 dynamicrun: dynamicmain
 	@echo "********** RUN dynamic "
@@ -76,7 +77,7 @@ pythonrun: dynamiclib
 	@echo "********** END python c link "
 
 wasi: mkdir 
-	@${CLANG} helloworld-main.c helloworld-lib.c -o $(DIST_DIR)/helloworld-main.wasm
+	@${CLANG} $(SRC_DIR)/helloworld-main.c $(SRC_DIR)/helloworld-lib.c -o $(DIST_DIR)/helloworld-main.wasm
 
 noderun: wasi
 	@echo "********** RUN node main "
@@ -88,29 +89,34 @@ wasmtimerun: wasi
 	@wasmtime $(DIST_DIR)/helloworld-main.wasm
 	@echo "********** END wasmtime main "
 
-httplib: helloworld-lib.h helloworld-lib.c mkdir
-	@$(EMCC) -O3 -s WASM=1 -s -s EXPORTED_RUNTIME_METHODS=ccall,cwrap helloworld-lib.c -o $(DIST_DIR)/helloworld-lib.js
+httplib: $(SRC_DIR)/helloworld-lib.h $(SRC_DIR)/helloworld-lib.c mkdir
+	@$(EMCC) -O3 -s WASM=1 -s -s EXPORTED_RUNTIME_METHODS=ccall,cwrap $(SRC_DIR)/helloworld-lib.c -o $(DIST_DIR)/helloworld-lib.js
 
 http: httplib
 	python3 -m http.server
 
-wasibuildlib: helloworld-lib.c 
-	${CLANG} -s ENVIRONMENT=node -s WASM=0 helloworld-lib.c -s LINKABLE=1 -s EXPORT_ALL=1 -o helloworld-lib.js
+nodelib: $(SRC_DIR)/helloworld-lib.h $(SRC_DIR)/helloworld-lib.c mkdir
+	$(EMCC) $(SRC_DIR)/helloworld-lib.c -s MODULARIZE=1  -s EXPORTED_RUNTIME_METHODS=ccall -o helloworld-lib.js
+#	$(EMSDK_NODE) --no-warnings  --experimental-wasi-unstable-preview1 main-lib.js
+	$(EMCC) -s MAIN_MODULE $(SRC_DIR)/helloworld-lib.c libhelloworld.wasm
 
-wasibuild: helloworld-main.c helloworld-lib.c 
-	${CLANG} helloworld-main.c helloworld-lib.c  -o helloworld-main.wasm
-	${CLANG} helloworld-lib.c  -o helloworld-lib.wasm
+wasibuildlib: $(SRC_DIR)/helloworld-lib.c 
+	${CLANG} -s ENVIRONMENT=node -s WASM=0 $(SRC_DIR)/helloworld-lib.c -s LINKABLE=1 -s EXPORT_ALL=1 -o helloworld-lib.js
+
+wasibuild: $(SRC_DIR)/helloworld-main.c $(SRC_DIR)/helloworld-lib.c 
+	${CLANG} $(SRC_DIR)/helloworld-main.c $(SRC_DIR)/helloworld-lib.c  -o helloworld-main.wasm
+	${CLANG} $(SRC_DIR)/helloworld-lib.c  -o helloworld-lib.wasm
 
 emcc: 
 #	${EMCC}/emcc -O2 helloworld-lib.c -c -o helloworld-lib.o
-	${EMCC}  helloworld-lib.c  -s LINKABLE=1 -s EXPORT_ALL=1  -o helloworld-lib.js
+	${EMCC}  $(SRC_DIR)/helloworld-lib.c  -s LINKABLE=1 -s EXPORT_ALL=1  -o helloworld-lib.js
 #	${EMCC}/emcc   -O2 helloworld-main.c -c -o helloworld-main.o
 #	${EMCC}/emcc  helloworld-lib.o -o helloworld-lib.js
 
 	${EMSDK_NODE} helloworld-main.js
 
 emcc2:
-	${EMCC}  test.c  -s LINKABLE=1 -s EXPORT_ALL=1  -o test.js
+	${EMCC} test.c  -s LINKABLE=1 -s EXPORT_ALL=1  -o test.js
 	${EMSDK_NODE} main.js
 
 embedded:
@@ -119,8 +125,8 @@ embedded:
 container:
 	docker build -t makebuntu .
 
-wasmlib: helloworld-lib.h helloworld-lib.c mkdir
-	$(EMCC) $(CFLAGS) -c helloworld-lib.c -o $(BUILD_DIR)/helloworld-lib.o
+wasmlib: $(SRC_DIR)/helloworld-lib.h $(SRC_DIR)/helloworld-lib.c mkdir
+	$(EMCC) $(CFLAGS) -c $(SRC_DIR)/helloworld-lib.c -o $(BUILD_DIR)/helloworld-lib.o
 	$(EMAR) $(BUILD_DIR)/helloworld-lib.a $(BUILD_DIR)/helloworld-lib.o
 	$(RANLIB) $(BUILD_DIR)/helloworld-lib.a
 
@@ -131,6 +137,6 @@ wasm: wasmlib mkdir
 #	$(EMCC) source.c -s SIDE_MODULE=1 -o target.wasm
 
 
-wasmlib2: helloworld-lib.h helloworld-lib.c mkdir
+wasmlib2: $(SRC_DIR)/helloworld-lib.h $(SRC_DIR)/helloworld-lib.c mkdir
 #	$(EMCC) $(CFLAGS)  helloworld-lib.c -o $(DIST_DIR)/helloworld-lib.js $(EMCCFLAGS)
-	$(EMCC) -O3 -s WASM=1 -s EXPORTED_RUNTIME_METHODS='["cwrap"]' helloworld-lib.c -o $(DIST_DIR)/helloworld-lib.js
+	$(EMCC) -O3 -s WASM=1 -s EXPORTED_RUNTIME_METHODS='["cwrap"]' $(SRC_DIR)/helloworld-lib.c -o $(DIST_DIR)/helloworld-lib.js

@@ -18,8 +18,6 @@ int helloworld(const char * name) {
     return 42;
 }
 
-
-
 #ifdef __EMSCRIPTEN__
     EMSCRIPTEN_KEEPALIVE
 #endif
