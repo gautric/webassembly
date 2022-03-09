@@ -66,7 +66,7 @@ dynamicrun: dynamicmain
 	LD_LIBRARY_PATH=/app/$(DIST_DIR):$(DIST_DIR) $(DIST_DIR)/dynamicmain
 
 pythonrun: dynamiclib
-	python helloworld.py
+	python3 helloworld.py
 
 wasi: mkdir 
 	${CLANG} helloworld-main.c helloworld-lib.c -o $(DIST_DIR)/helloworld-main.wasm
