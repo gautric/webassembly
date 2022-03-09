@@ -37,49 +37,59 @@ mkdir:
 	@mkdir -p $(DIST_DIR)
 	@mkdir -p $(BUILD_DIR)
 
-check: staticrun dynamicrun noderun pythonrun wasmtimerun
+check: staticrun dynamicrun noderun pythonrun wasmtimerun httplib
 
 clean: 
 	rm -rf *.a *.o *.so *.wasm staticmain dynamicmain main $(BUILD_DIR) $(DIST_DIR)
 
 objlib: helloworld-lib.c helloworld-lib.h mkdir
-	$(CC) -Wall -c helloworld-lib.c -o $(BUILD_DIR)/helloworld-lib.o
+	@$(CC) -Wall -c helloworld-lib.c -o $(BUILD_DIR)/helloworld-lib.o
 
 staticlib: objlib
-	$(AR) -cvq $(BUILD_DIR)/helloworld-lib.a $(BUILD_DIR)/helloworld-lib.o
+	@$(AR) -cvq $(BUILD_DIR)/helloworld-lib.a $(BUILD_DIR)/helloworld-lib.o
 
 staticmain: staticlib helloworld-main.c mkdir
-	$(CC) -Wall  helloworld-main.c $(BUILD_DIR)/helloworld-lib.a -o $(DIST_DIR)/staticmain
+	@$(CC) -Wall  helloworld-main.c $(BUILD_DIR)/helloworld-lib.a -o $(DIST_DIR)/staticmain
 
 staticrun: staticmain
-	$(DIST_DIR)/staticmain
+	@echo "********** RUN static "
+	@$(DIST_DIR)/staticmain
+	@echo "********** END static "
 
 #https://www.cprogramming.com/tutorial/shared-libraries-linux-gcc.html
 dynamiclib: helloworld-lib.c helloworld-lib.h helloworld-main.c
-	$(CC) -c -Wall -Werror -fPIC helloworld-lib.c
-	$(CC) -shared  $(BUILD_DIR)/helloworld-lib.o -o $(DIST_DIR)/libhelloworld.so
+	@$(CC) -c -Wall -Werror -fPIC helloworld-lib.c
+	@$(CC) -shared  $(BUILD_DIR)/helloworld-lib.o -o $(DIST_DIR)/libhelloworld.so
 	
 dynamicmain: dynamiclib mkdir
-	$(CC) -L$(DIST_DIR) -Wall -o $(DIST_DIR)/dynamicmain helloworld-main.c -lhelloworld
+	@$(CC) -L$(DIST_DIR) -Wall -o $(DIST_DIR)/dynamicmain helloworld-main.c -lhelloworld
 
 dynamicrun: dynamicmain
-	LD_LIBRARY_PATH=/app/$(DIST_DIR):$(DIST_DIR) $(DIST_DIR)/dynamicmain
+	@echo "********** RUN dynamic "
+	@LD_LIBRARY_PATH=/app/$(DIST_DIR):$(DIST_DIR) $(DIST_DIR)/dynamicmain
+	@echo "********** END static "
+
 
 pythonrun: dynamiclib
-	python3 helloworld.py
+	@echo "********** RUN python c link "
+	@python3 helloworld.py
+	@echo "********** END python c link "
 
 wasi: mkdir 
-	${CLANG} helloworld-main.c helloworld-lib.c -o $(DIST_DIR)/helloworld-main.wasm
+	@${CLANG} helloworld-main.c helloworld-lib.c -o $(DIST_DIR)/helloworld-main.wasm
 
 noderun: wasi
-	${EMSDK_NODE} --no-warnings  --experimental-wasi-unstable-preview1 helloworld-wasi.js 
+	@echo "********** RUN node main "
+	@${EMSDK_NODE} --no-warnings  --experimental-wasi-unstable-preview1 helloworld-wasi.js 
+	@echo "********** END node main "
 
 wasmtimerun: wasi
-	wasmtime $(DIST_DIR)/helloworld-main.wasm
-
+	@echo "********** RUN wasmtime main "
+	@wasmtime $(DIST_DIR)/helloworld-main.wasm
+	@echo "********** END wasmtime main "
 
 httplib: helloworld-lib.h helloworld-lib.c mkdir
-	$(EMCC) -O3 -s WASM=1 -s -s EXPORTED_RUNTIME_METHODS=ccall,cwrap helloworld-lib.c -o $(DIST_DIR)/helloworld-lib.js
+	@$(EMCC) -O3 -s WASM=1 -s -s EXPORTED_RUNTIME_METHODS=ccall,cwrap helloworld-lib.c -o $(DIST_DIR)/helloworld-lib.js
 
 http: httplib
 	python3 -m http.server
