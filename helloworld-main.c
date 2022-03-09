@@ -2,5 +2,6 @@
 
 int main() {
     int ret = helloworld("Thomas");
-    printf("%d\n", ret);
+    printf("ret = %d (from helloworld)\n", ret);
+    return(0);
 }
