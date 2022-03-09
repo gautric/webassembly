@@ -14,10 +14,7 @@ CLANG=${WASMTIME_SDK}/bin/clang
 CSOURCE=$(SOURCE:=.c)
 PDFOBJECT=$(SOURCE:=.pdf)
 
-LD_LIBRARY_PATH=${PWD}
-
-# docker run -ti -v `pwd`:/app ubuntu  /bin/bash
-# apt-get update && apt-get install -y build-essential  python3.9 
+LD_LIBRARY_PATH=/app:${PWD}
 
 all: staticmain dynamicmain  
 
@@ -33,8 +30,11 @@ staticlib: objlib
 staticmain: staticlib helloworld-main.c
 	gcc -Wall -o staticmain helloworld-main.c helloworld-lib.a
 
+staticrun:
+	./staticmain
+
 #https://www.cprogramming.com/tutorial/shared-libraries-linux-gcc.html
-dynamiclib: 	
+dynamiclib: helloworld-lib.c helloworld-lib.h helloworld-main.c
 	gcc -c -Wall -Werror -fPIC helloworld-lib.c
 	gcc -shared -o libhelloworld.so helloworld-lib.o
 	
@@ -42,7 +42,7 @@ dynamicmain: dynamiclib
 	gcc -L. -Wall -o dynamicmain helloworld-main.c -lhelloworld
 
 dynamicrun: dynamicmain
-	./dynamicmain
+	LD_LIBRARY_PATH=/app:. ./dynamicmain
 
 python: dynamiclib
 	python3.9 helloworld.py 
@@ -61,10 +61,12 @@ emcc:
 
 	${EMSDK_NODE} helloworld-main.js
 
-
-
 test: 
 	${EMCC}/emcc  test.c  -s LINKABLE=1 -s EXPORT_ALL=1  -o test.js
 	${EMSDK_NODE} main.js
 
+embedded:
+	docker run -ti -v `pwd`:/app --workdir /app  makebuntu  'make container'
 
+container:
+	docker build -t makebuntu .
