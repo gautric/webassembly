@@ -77,6 +77,13 @@ noderun: wasi
 wasmtimerun: wasi
 	wasmtime $(DIST_DIR)/helloworld-main.wasm
 
+
+wasmlib: helloworld-lib.h helloworld-lib.c mkdir
+	$(EMCC) -O3 -s WASM=1 -s EXPORTED_RUNTIME_METHODS='["cwrap"]' helloworld-lib.c -o $(DIST_DIR)/helloworld-lib.js
+
+http: wasmlib
+	python3 -m http.server
+
 wasibuildlib: helloworld-lib.c 
 	${CLANG} -s ENVIRONMENT=node -s WASM=0 helloworld-lib.c -s LINKABLE=1 -s EXPORT_ALL=1 -o helloworld-lib.js
 
@@ -102,19 +109,18 @@ embedded:
 container:
 	docker build -t makebuntu .
 
-wasmlib: helloworld-lib.h helloworld-lib.c
-	@mkdir -p $(BUILD_DIR)
+wasmlib: helloworld-lib.h helloworld-lib.c mkdir
 	$(EMCC) $(CFLAGS) -c helloworld-lib.c -o $(BUILD_DIR)/helloworld-lib.o
 	$(EMAR) $(BUILD_DIR)/helloworld-lib.a $(BUILD_DIR)/helloworld-lib.o
 	$(RANLIB) $(BUILD_DIR)/helloworld-lib.a
 
-wasm: wasmlib
-	@mkdir -p $(DIST_DIR);
+wasm: wasmlib mkdir 
 	$(EMCC) $(CFLAGS) $(BUILD_DIR)/helloworld-lib.a -o $(DIST_DIR)/helloworld-lib.wasm $(EMCCFLAGS)
 #	$(EMCC) $(CFLAGS) $(BUILD_DIR)/helloworld-lib.a -o $(DIST_DIR)/main.js $(EMCCFLAGS)
 #	cp ./liblinear.d.ts $(BUILD_DIR)/liblinear.d.ts
 #	$(EMCC) source.c -s SIDE_MODULE=1 -o target.wasm
 
 
-wasmlib2: helloworld-lib.h helloworld-lib.c
-	$(EMCC) $(CFLAGS)  helloworld-lib.c -o $(DIST_DIR)/helloworld-lib.js $(EMCCFLAGS)
+wasmlib2: helloworld-lib.h helloworld-lib.c mkdir
+#	$(EMCC) $(CFLAGS)  helloworld-lib.c -o $(DIST_DIR)/helloworld-lib.js $(EMCCFLAGS)
+	$(EMCC) -O3 -s WASM=1 -s EXPORTED_RUNTIME_METHODS='["cwrap"]' helloworld-lib.c -o $(DIST_DIR)/helloworld-lib.js

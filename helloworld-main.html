@@ -1,0 +1,10 @@
+<script src="./dist/helloworld-lib.js"></script>
+<script>
+  Module.onRuntimeInitialized = async _ => {
+    const api = {
+        helloworld: Module.cwrap('helloworld', 'number', ['string']),
+    };
+    
+    api.helloworld('Marie');
+  };
+</script>
