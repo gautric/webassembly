@@ -7,14 +7,17 @@
   <script src="./dist/helloworld-lib.js"></script>
  </head>
  <body>
+
+  <a href="https://developer.mozilla.org/en-US/docs/WebAssembly/existing_C_to_wasm">Documentation</a>
+
   <div id="ret"></div>
   <script>
     Module.onRuntimeInitialized = async _ => {
       const api = {
           helloworld: Module.cwrap('helloworld', 'number', ['string']),
+          version: Module.cwrap('version', 'number', []),
       };
       const div = document.getElementById('ret');
-
       div.textContent = 'Retour appel librairie "' + api.helloworld('Marie')+'"';
     };
   </script>

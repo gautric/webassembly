@@ -78,10 +78,10 @@ wasmtimerun: wasi
 	wasmtime $(DIST_DIR)/helloworld-main.wasm
 
 
-wasmlib: helloworld-lib.h helloworld-lib.c mkdir
-	$(EMCC) -O3 -s WASM=1 -s EXPORTED_RUNTIME_METHODS='["cwrap"]' helloworld-lib.c -o $(DIST_DIR)/helloworld-lib.js
+httplib: helloworld-lib.h helloworld-lib.c mkdir
+	$(EMCC) -O3 -s WASM=1 -s -s EXPORTED_RUNTIME_METHODS=ccall,cwrap helloworld-lib.c -o $(DIST_DIR)/helloworld-lib.js
 
-http: wasmlib
+http: httplib
 	python3 -m http.server
 
 wasibuildlib: helloworld-lib.c 
