@@ -1,7 +1,3 @@
-ifeq ($(shell uname -s),Darwin)
-	WASI_SDK_PATH=${HOME}/Source/wasm/wasi-sdk-14.0
-	EMSDK=${HOME}/Source/wasm/emsdk
-endif
  
 EM_CONFIG=${EMSDK}/.emscripten
 EMSDK_NODE=${EMSDK}/node/14.18.2_64bit/bin/node
@@ -10,17 +6,26 @@ SSL_CERT_FILE=${EMSDK}/python/3.9.2_64bit/lib/python3.9/site-packages/certifi/ca
 EMCC=${EMSDK}/upstream/emscripten/emcc
 
 WASMTIME_HOME=~/.wasmtime
-CLANG=$(WASI_SDK_PATH)/bin/clang 
 
 CSOURCE=$(SOURCE:=.c)
 PDFOBJECT=$(SOURCE:=.pdf)
+
+ifeq ($(shell uname -s),Darwin)
+	WASI_SDK_PATH=${HOME}/Source/wasm/wasi-sdk-14.0
+	EMSDK=${HOME}/Source/wasm/emsdk
+endif
+
+CLANG=${WASI_SDK_PATH}/bin/clang --sysroot=${WASI_SDK_PATH}/share/wasi-sysroot
+
 
 LD_LIBRARY_PATH=/app:${PWD}
 
 all: staticmain dynamicmain  
 
+check: staticrun dynamicrun node
+
 clean: 
-	rm -f *.a *.o *.so staticmain main
+	rm -f *.a *.o *.so *.wasm staticmain dynamicmain main
 
 objlib: helloworld-lib.c helloworld-lib.h
 	gcc -Wall -c helloworld-lib.c
@@ -31,7 +36,7 @@ staticlib: objlib
 staticmain: staticlib helloworld-main.c
 	gcc -Wall -o staticmain helloworld-main.c helloworld-lib.a
 
-staticrun:
+staticrun: staticmain
 	./staticmain
 
 #https://www.cprogramming.com/tutorial/shared-libraries-linux-gcc.html
@@ -54,6 +59,16 @@ wasi:
 node: wasi
 	${EMSDK_NODE} --no-warnings  --experimental-wasi-unstable-preview1 helloworld-wasi.js 
 
+wasibuildlib: helloworld-lib.c 
+	${CLANG} -s ENVIRONMENT=node -s WASM=0 helloworld-lib.c -s LINKABLE=1 -s EXPORT_ALL=1 -o helloworld-lib.js
+
+wasibuild: helloworld-main.c helloworld-lib.c 
+	${CLANG} helloworld-main.c helloworld-lib.c  -o helloworld-main.wasm
+	${CLANG} helloworld-lib.c  -o helloworld-lib.wasm
+
+wasirun: wasibuild
+	wasmtime helloworld-main.wasm
+
 emcc: 
 #	${EMCC}/emcc -O2 helloworld-lib.c -c -o helloworld-lib.o
 	${EMCC}  helloworld-lib.c  -s LINKABLE=1 -s EXPORT_ALL=1  -o helloworld-lib.js
@@ -62,7 +77,7 @@ emcc:
 
 	${EMSDK_NODE} helloworld-main.js
 
-test:
+emcc2:
 	${EMCC}  test.c  -s LINKABLE=1 -s EXPORT_ALL=1  -o test.js
 	${EMSDK_NODE} main.js
 
