@@ -36,7 +36,7 @@ mkdir:
 	@mkdir -p $(DIST_DIR)
 	@mkdir -p $(BUILD_DIR)
 
-check: staticrun dynamicrun noderun pythonrun
+check: staticrun dynamicrun noderun pythonrun wasmtimerun
 
 clean: 
 	rm -rf *.a *.o *.so *.wasm staticmain dynamicmain main $(BUILD_DIR) $(DIST_DIR)
@@ -73,15 +73,15 @@ wasi: mkdir
 noderun: wasi
 	${EMSDK_NODE} --no-warnings  --experimental-wasi-unstable-preview1 helloworld-wasi.js 
 
+wasmtimerun: wasi
+	wasmtime $(DIST_DIR)/helloworld-main.wasm
+
 wasibuildlib: helloworld-lib.c 
 	${CLANG} -s ENVIRONMENT=node -s WASM=0 helloworld-lib.c -s LINKABLE=1 -s EXPORT_ALL=1 -o helloworld-lib.js
 
 wasibuild: helloworld-main.c helloworld-lib.c 
 	${CLANG} helloworld-main.c helloworld-lib.c  -o helloworld-main.wasm
 	${CLANG} helloworld-lib.c  -o helloworld-lib.wasm
-
-wasirun: wasibuild
-	wasmtime helloworld-main.wasm
 
 emcc: 
 #	${EMCC}/emcc -O2 helloworld-lib.c -c -o helloworld-lib.o
