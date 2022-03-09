@@ -1,15 +1,16 @@
-
-WASMTIME_SDK=${HOME}/Source/wasm/wasi-sdk-14.0
-EMSDK=${HOME}/Source/wasm/emsdk
-
+ifeq ($(shell uname -s),Darwin)
+	WASI_SDK_PATH=${HOME}/Source/wasm/wasi-sdk-14.0
+	EMSDK=${HOME}/Source/wasm/emsdk
+endif
+ 
 EM_CONFIG=${EMSDK}/.emscripten
 EMSDK_NODE=${EMSDK}/node/14.18.2_64bit/bin/node
 EMSDK_PYTHON=${EMSDK}/python/3.9.2_64bit/bin/python3
 SSL_CERT_FILE=${EMSDK}/python/3.9.2_64bit/lib/python3.9/site-packages/certifi/cacert.pem
-EMCC=${EMSDK}/upstream/emscripten
+EMCC=${EMSDK}/upstream/emscripten/emcc
 
 WASMTIME_HOME=~/.wasmtime
-CLANG=${WASMTIME_SDK}/bin/clang 
+CLANG=$(WASI_SDK_PATH)/bin/clang 
 
 CSOURCE=$(SOURCE:=.c)
 PDFOBJECT=$(SOURCE:=.pdf)
@@ -48,21 +49,21 @@ python: dynamiclib
 	python3.9 helloworld.py 
 
 wasi: 
-	${WASMTIME_SDK}/bin/clang   helloworld-main.c helloworld-lib.c -o helloworld-main.wasm
+	${CLANG} helloworld-main.c helloworld-lib.c -o helloworld-main.wasm
 
 node: wasi
 	${EMSDK_NODE} --no-warnings  --experimental-wasi-unstable-preview1 helloworld-wasi.js 
 
 emcc: 
 #	${EMCC}/emcc -O2 helloworld-lib.c -c -o helloworld-lib.o
-	${EMCC}/emcc  helloworld-lib.c  -s LINKABLE=1 -s EXPORT_ALL=1  -o helloworld-lib.js
+	${EMCC}  helloworld-lib.c  -s LINKABLE=1 -s EXPORT_ALL=1  -o helloworld-lib.js
 #	${EMCC}/emcc   -O2 helloworld-main.c -c -o helloworld-main.o
 #	${EMCC}/emcc  helloworld-lib.o -o helloworld-lib.js
 
 	${EMSDK_NODE} helloworld-main.js
 
-test: 
-	${EMCC}/emcc  test.c  -s LINKABLE=1 -s EXPORT_ALL=1  -o test.js
+test:
+	${EMCC}  test.c  -s LINKABLE=1 -s EXPORT_ALL=1  -o test.js
 	${EMSDK_NODE} main.js
 
 embedded:
