@@ -1,10 +1,23 @@
-<script src="./dist/helloworld-lib.js"></script>
-<script>
-  Module.onRuntimeInitialized = async _ => {
-    const api = {
-        helloworld: Module.cwrap('helloworld', 'number', ['string']),
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<html>
+ <head>
+  <title>
+   Exemple de helloworld-lib
+  </title>
+  <script src="./dist/helloworld-lib.js"></script>
+ </head>
+ <body>
+  <div id="ret"></div>
+  <script>
+    Module.onRuntimeInitialized = async _ => {
+      const api = {
+          helloworld: Module.cwrap('helloworld', 'number', ['string']),
+      };
+      const div = document.getElementById('ret');
+
+      div.textContent = 'Retour appel librairie "' + api.helloworld('Marie')+'"';
     };
-    
-    api.helloworld('Marie');
-  };
-</script>
+  </script>
+
+</body>
+</html>
