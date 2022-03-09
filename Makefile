@@ -20,8 +20,9 @@ endif
 
 CLANG=${WASI_SDK_PATH}/bin/clang --sysroot=${WASI_SDK_PATH}/share/wasi-sysroot
 
-
-AR = emar rcv
+CC = gcc
+AR = ar
+EMAR = emar rcv
 RANLIB = emranlib
 CFLAGS = -Wall -Wconversion -O3 -fPIC -Wemcc
 #CFLAGS = -Wall -Wconversion -fPIC -Wemcc
@@ -42,24 +43,24 @@ clean:
 	rm -rf *.a *.o *.so *.wasm staticmain dynamicmain main $(BUILD_DIR) $(DIST_DIR)
 
 objlib: helloworld-lib.c helloworld-lib.h mkdir
-	gcc -Wall -c helloworld-lib.c -o $(BUILD_DIR)/helloworld-lib.o
+	$(CC) -Wall -c helloworld-lib.c -o $(BUILD_DIR)/helloworld-lib.o
 
 staticlib: objlib
-	ar -cvq $(BUILD_DIR)/helloworld-lib.a $(BUILD_DIR)/helloworld-lib.o
+	$(AR) -cvq $(BUILD_DIR)/helloworld-lib.a $(BUILD_DIR)/helloworld-lib.o
 
 staticmain: staticlib helloworld-main.c mkdir
-	gcc -Wall  helloworld-main.c $(BUILD_DIR)/helloworld-lib.a -o $(DIST_DIR)/staticmain
+	$(CC) -Wall  helloworld-main.c $(BUILD_DIR)/helloworld-lib.a -o $(DIST_DIR)/staticmain
 
 staticrun: staticmain
 	$(DIST_DIR)/staticmain
 
 #https://www.cprogramming.com/tutorial/shared-libraries-linux-gcc.html
 dynamiclib: helloworld-lib.c helloworld-lib.h helloworld-main.c
-	gcc -c -Wall -Werror -fPIC helloworld-lib.c
-	gcc -shared  $(BUILD_DIR)/helloworld-lib.o -o $(DIST_DIR)/libhelloworld.so
+	$(CC) -c -Wall -Werror -fPIC helloworld-lib.c
+	$(CC) -shared  $(BUILD_DIR)/helloworld-lib.o -o $(DIST_DIR)/libhelloworld.so
 	
 dynamicmain: dynamiclib mkdir
-	gcc -L$(DIST_DIR) -Wall -o $(DIST_DIR)/dynamicmain helloworld-main.c -lhelloworld
+	$(CC) -L$(DIST_DIR) -Wall -o $(DIST_DIR)/dynamicmain helloworld-main.c -lhelloworld
 
 dynamicrun: dynamicmain
 	LD_LIBRARY_PATH=/app/$(DIST_DIR):$(DIST_DIR) $(DIST_DIR)/dynamicmain
@@ -104,7 +105,7 @@ container:
 wasmlib: helloworld-lib.h helloworld-lib.c
 	@mkdir -p $(BUILD_DIR)
 	$(EMCC) $(CFLAGS) -c helloworld-lib.c -o $(BUILD_DIR)/helloworld-lib.o
-	$(AR) $(BUILD_DIR)/helloworld-lib.a $(BUILD_DIR)/helloworld-lib.o
+	$(EMAR) $(BUILD_DIR)/helloworld-lib.a $(BUILD_DIR)/helloworld-lib.o
 	$(RANLIB) $(BUILD_DIR)/helloworld-lib.a
 
 wasm: wasmlib
