@@ -2,17 +2,19 @@
 #include "helloworld-lib.h"
 
 #ifdef __EMSCRIPTEN__
-#include <emscripten.h>
+    #include <emscripten.h>
 #endif
 
 #ifdef __cplusplus
-extern "C" {
+    extern "C" {
 #endif
 
-__attribute__((used))
+#ifdef __EMSCRIPTEN__
+    EMSCRIPTEN_KEEPALIVE
+#endif
 
-int helloWorld(const char * name) {
-    printf("Call 'helloWorld' %s \n", name);
+int helloworld(const char * name) {
+    printf("Call 'helloworld' %s \n", name);
     return 42;
 }
 

@@ -10,6 +10,9 @@ WASMTIME_HOME=~/.wasmtime
 CSOURCE=$(SOURCE:=.c)
 PDFOBJECT=$(SOURCE:=.pdf)
 
+BUILD_DIR=build
+DIST_DIR=dist
+
 ifeq ($(shell uname -s),Darwin)
 	WASI_SDK_PATH=${HOME}/Source/wasm/wasi-sdk-14.0
 	EMSDK=${HOME}/Source/wasm/emsdk
@@ -18,45 +21,56 @@ endif
 CLANG=${WASI_SDK_PATH}/bin/clang --sysroot=${WASI_SDK_PATH}/share/wasi-sysroot
 
 
+AR = emar rcv
+RANLIB = emranlib
+CFLAGS = -Wall -Wconversion -O3 -fPIC -Wemcc
+#CFLAGS = -Wall -Wconversion -fPIC -Wemcc
+EMCCFLAGS = -Wemcc -s ASSERTIONS=2 -s "EXPORT_NAME=\"helloworld\"" -s MODULARIZE=1 -s DISABLE_EXCEPTION_CATCHING=0 -s NODEJS_CATCH_EXIT=0  -s WASM=1 -s ALLOW_MEMORY_GROWTH=1  -s SIDE_MODULE=1
+EMCCFLAGS = -Wemcc -s MODULARIZE -s ERROR_ON_UNDEFINED_SYMBOLS=0 -s EXPORTED_FUNCTIONS=helloworld -s EXPORT_NAME=helloworld -s EXPORTED_RUNTIME_METHODS=ccall -s DEFAULT_LIBRARY_FUNCS_TO_INCLUDE=helloworld
+
 LD_LIBRARY_PATH=/app:${PWD}
 
 all: staticmain dynamicmain  
 
-check: staticrun dynamicrun node
+mkdir:
+	@mkdir -p $(DIST_DIR)
+	@mkdir -p $(BUILD_DIR)
+
+check: staticrun dynamicrun noderun pythonrun
 
 clean: 
-	rm -f *.a *.o *.so *.wasm staticmain dynamicmain main
+	rm -rf *.a *.o *.so *.wasm staticmain dynamicmain main $(BUILD_DIR) $(DIST_DIR)
 
-objlib: helloworld-lib.c helloworld-lib.h
-	gcc -Wall -c helloworld-lib.c
+objlib: helloworld-lib.c helloworld-lib.h mkdir
+	gcc -Wall -c helloworld-lib.c -o $(BUILD_DIR)/helloworld-lib.o
 
 staticlib: objlib
-	ar -cvq helloworld-lib.a helloworld-lib.o
+	ar -cvq $(BUILD_DIR)/helloworld-lib.a $(BUILD_DIR)/helloworld-lib.o
 
-staticmain: staticlib helloworld-main.c
-	gcc -Wall -o staticmain helloworld-main.c helloworld-lib.a
+staticmain: staticlib helloworld-main.c mkdir
+	gcc -Wall  helloworld-main.c $(BUILD_DIR)/helloworld-lib.a -o $(DIST_DIR)/staticmain
 
 staticrun: staticmain
-	./staticmain
+	$(DIST_DIR)/staticmain
 
 #https://www.cprogramming.com/tutorial/shared-libraries-linux-gcc.html
 dynamiclib: helloworld-lib.c helloworld-lib.h helloworld-main.c
 	gcc -c -Wall -Werror -fPIC helloworld-lib.c
-	gcc -shared -o libhelloworld.so helloworld-lib.o
+	gcc -shared  $(BUILD_DIR)/helloworld-lib.o -o $(DIST_DIR)/libhelloworld.so
 	
-dynamicmain: dynamiclib
-	gcc -L. -Wall -o dynamicmain helloworld-main.c -lhelloworld
+dynamicmain: dynamiclib mkdir
+	gcc -L$(DIST_DIR) -Wall -o $(DIST_DIR)/dynamicmain helloworld-main.c -lhelloworld
 
 dynamicrun: dynamicmain
-	LD_LIBRARY_PATH=/app:. ./dynamicmain
+	LD_LIBRARY_PATH=/app/$(DIST_DIR):$(DIST_DIR) $(DIST_DIR)/dynamicmain
 
-python: dynamiclib
-	python3.9 helloworld.py 
+pythonrun: dynamiclib
+	python helloworld.py
 
-wasi: 
-	${CLANG} helloworld-main.c helloworld-lib.c -o helloworld-main.wasm
+wasi: mkdir 
+	${CLANG} helloworld-main.c helloworld-lib.c -o $(DIST_DIR)/helloworld-main.wasm
 
-node: wasi
+noderun: wasi
 	${EMSDK_NODE} --no-warnings  --experimental-wasi-unstable-preview1 helloworld-wasi.js 
 
 wasibuildlib: helloworld-lib.c 
@@ -86,3 +100,20 @@ embedded:
 
 container:
 	docker build -t makebuntu .
+
+wasmlib: helloworld-lib.h helloworld-lib.c
+	@mkdir -p $(BUILD_DIR)
+	$(EMCC) $(CFLAGS) -c helloworld-lib.c -o $(BUILD_DIR)/helloworld-lib.o
+	$(AR) $(BUILD_DIR)/helloworld-lib.a $(BUILD_DIR)/helloworld-lib.o
+	$(RANLIB) $(BUILD_DIR)/helloworld-lib.a
+
+wasm: wasmlib
+	@mkdir -p $(DIST_DIR);
+	$(EMCC) $(CFLAGS) $(BUILD_DIR)/helloworld-lib.a -o $(DIST_DIR)/helloworld-lib.wasm $(EMCCFLAGS)
+#	$(EMCC) $(CFLAGS) $(BUILD_DIR)/helloworld-lib.a -o $(DIST_DIR)/main.js $(EMCCFLAGS)
+#	cp ./liblinear.d.ts $(BUILD_DIR)/liblinear.d.ts
+#	$(EMCC) source.c -s SIDE_MODULE=1 -o target.wasm
+
+
+wasmlib2: helloworld-lib.h helloworld-lib.c
+	$(EMCC) $(CFLAGS)  helloworld-lib.c -o $(DIST_DIR)/helloworld-lib.js $(EMCCFLAGS)

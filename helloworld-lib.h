@@ -3,7 +3,9 @@
 #ifndef helloWorld_h__
 #define helloWorld_h__
  
-extern int helloWorld(const char * name);
+#define export __attribute__( ( visibility( "default" ) ) 
+
+extern int helloworld(const char * name);
  
 #endif  // helloWorld_h__
 
