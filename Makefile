@@ -75,12 +75,12 @@ dynamicrun: dynamicmain
 
 pythonrun: dynamiclib
 	@echo "********** RUN python c link "
-	@HELLOWORD_ENV=myvar python3 helloworld.py
+	@HELLOWORLD_ENV=myvar python3 helloworld.py
 	@echo "********** END python c link "
 
 pythonmainrun: dynamiclib
 	@echo "********** RUN python main wasi "
-	@HELLOWORD_ENV=myvar python3.8 wasi-main.py
+	@HELLOWORLD_ENV=myvar python3.8 wasi-main.py
 	@echo "********** END python main wasi "
 
 wasi: mkdir 

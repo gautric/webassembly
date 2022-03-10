@@ -16,7 +16,7 @@
 int helloworld(const char * name) {
     printf("Call 'helloworld' %s \n", name);
 
-    printf("HELLOWORD_ENV = %s \n", getenv(HELLOWORD_ENV));
+    printf("HELLOWORLD_ENV = %s \n", getenv(HELLOWORLD_ENV));
 
     return 42;
 }

@@ -49,7 +49,7 @@ wasi_version = wasi.get_version(module, strict=True)
 wasi_env = \
     wasi.StateBuilder('helloworld'). \
         argument('--test'). \
-        environment('HELLOWORD_ENV', 'helloworld_value'). \
+        environment('HELLOWORLD_ENV', 'helloworld_value'). \
         map_directory('the_host_current_dir', '.'). \
         finalize()
 

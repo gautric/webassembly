@@ -4,7 +4,10 @@ import { argv, env } from 'process';
 
 const wasi = new WASI({
   args: argv,
-  env,
+  env: {
+    'HELLOWORLD_ENV': "myEnv"
+
+  },
   preopens: {
     '.': '.'
   }
@@ -13,9 +16,9 @@ const wasi = new WASI({
 const importObject = {
   wasi_snapshot_preview1 : wasi.wasiImport,
   imports: {
-    imported_func: function(arg) {
-      console.log(arg);
-    },
+    // imported_func: function(arg) {
+    //   console.log(arg);
+    // },
     wasi_unstable: () => {}
   }
 };
