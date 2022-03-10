@@ -83,7 +83,7 @@ pythonmainrun: dynamiclib
 	@HELLOWORLD_ENV=myvar python3.8 python/helloworld-wasi-main.py
 	@echo "********** END python main wasi "
 
-pythonwasilib: dynamiclib
+pythonwasilib: dynamiclib wasmtimelibrun
 	@echo "********** RUN python wasi lib "
 	@python3.8 python/helloworld-wasi-lib.py
 	@echo "********** END python wasi lib "
