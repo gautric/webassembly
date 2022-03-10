@@ -9,7 +9,6 @@ module = Module(store, open('./dist/helloworld-lib-std.wasm', 'rb').read())
 wasi_version = wasi.get_version(module, strict=True)
 import_object = wasi.StateBuilder('lib').finalize().generate_import_object(store, wasi_version)
 
-
 instance = Instance(module, import_object)
 
 # export function
