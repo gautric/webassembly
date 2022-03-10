@@ -75,7 +75,7 @@ dynamicrun: dynamicmain
 
 pythonrun: dynamiclib
 	@echo "********** RUN python c link "
-	@HELLOWORLD_ENV=myvar python3 helloworld.py
+	@HELLOWORLD_ENV=myvar python3 helloworld-dynlib.py
 	@echo "********** END python c link "
 
 pythonmainrun: dynamiclib
