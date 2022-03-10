@@ -1,8 +1,9 @@
 // node main.js
-var Module = require('./helloworld-lib.js');
+Module = require('./helloworld-lib.js');
 
-Module().then((instance) => {
-  instance._helloworld("Thomas"); // direct calling works
-  instance.ccall("version"); // using ccall etc. also work
-  console.log(instance._helloworld("Marie")); // values can be returned, etc.
-});
+Module.onRuntimeInitialized = () => {
+  var helloworld = Module.cwrap('helloworld', 'number', ['string']);
+  console.log(helloworld('Marie'));
+}
+
+
