@@ -40,7 +40,7 @@ mkdir:
 	@mkdir -p $(DIST_DIR)
 	@mkdir -p $(BUILD_DIR)
 
-check: staticrun dynamicrun noderun pythonrun wasmtimerun httplib pythonmainrun wasmtimelibrun
+check: staticrun dynamicrun noderun pythonrun wasmtimerun httplib pythonmainrun wasmtimelibrun jsexec
 
 clean: 
 	rm -rf *.a *.o *.so *.wasm staticmain dynamicmain main $(BUILD_DIR) $(DIST_DIR)
@@ -110,8 +110,13 @@ httplib: $(SRC_DIR)/helloworld-lib.h $(SRC_DIR)/helloworld-lib.c mkdir
 http: httplib
 	python3 -m http.server
 
-nodelib: $(SRC_DIR)/helloworld-lib.h $(SRC_DIR)/helloworld-lib.c mkdir
-	$(EMCC) $(SRC_DIR)/helloworld-lib.c -O3 -s WASM=1  -s MODULARIZE 	 -s EXPORTED_RUNTIME_METHODS=ccall -o helloworld-js/helloworld-lib.js
+jslib: $(SRC_DIR)/helloworld-lib.h $(SRC_DIR)/helloworld-lib.c mkdir
+	@$(EMCC) $(SRC_DIR)/helloworld-lib.c -O3 -s WASM=1  -s MODULARIZE -s EXPORTED_RUNTIME_METHODS=ccall -o helloworld-js/helloworld-lib.js
+
+jsexec: jslib
+	@echo "********** RUN node lib "
+	@cd helloworld-js; $(EMSDK_NODE) --no-warnings  --experimental-wasi-unstable-preview1 main.js; cd ..
+	@echo "********** END node lib "
 
 #	$(EMCC) $(SRC_DIR)/helloworld-lib.c -s MODULARIZE=1  -s EXPORTED_RUNTIME_METHODS=ccall -o helloworld-lib.js
 #	$(EMSDK_NODE) --no-warnings  --experimental-wasi-unstable-preview1 main-lib.js
