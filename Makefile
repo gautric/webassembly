@@ -40,7 +40,7 @@ mkdir:
 	@mkdir -p $(DIST_DIR)
 	@mkdir -p $(BUILD_DIR)
 
-check: staticrun dynamicrun noderun pythonrun wasmtimerun httplib pythonmainrun
+check: staticrun dynamicrun noderun pythonrun wasmtimerun httplib pythonmainrun wasmtimelibrun
 
 clean: 
 	rm -rf *.a *.o *.so *.wasm staticmain dynamicmain main $(BUILD_DIR) $(DIST_DIR)
@@ -96,6 +96,14 @@ wasmtimerun: wasi
 	@wasmtime $(DIST_DIR)/helloworld-main.wasm
 	@echo "********** END wasmtime main "
 
+wasmtimelibrun: 
+	@echo "********** RUN wasmtime lib invoke "
+	@$(EMCC) -Oz --profiling-funcs -s WASM=1 -s STANDALONE_WASM -s EXPORTED_RUNTIME_METHODS=ccall,cwrap $(SRC_DIR)/helloworld-lib.c -o $(DIST_DIR)/helloworld-lib-std.js  --no-entry
+	@wasmtime $(DIST_DIR)/helloworld-lib-std.wasm --invoke version
+# Not yet available
+#	@wasmtime $(DIST_DIR)/helloworld-lib.wasm --invoke helloworld "Marie"
+	@echo "********** END wasmtime lib invoke "
+
 httplib: $(SRC_DIR)/helloworld-lib.h $(SRC_DIR)/helloworld-lib.c mkdir
 	@$(EMCC)  -s WASM=1 -s -s EXPORTED_RUNTIME_METHODS=ccall,cwrap $(SRC_DIR)/helloworld-lib.c -o $(DIST_DIR)/helloworld-lib.js
 
@@ -129,7 +137,7 @@ emcc2:
 	${EMSDK_NODE} main.js
 
 embedded:
-	docker run -ti -v `pwd`:/app --workdir /app  makebuntu  'make container'
+	docker run -ti -v `pwd`:/app --workdir /app  makebuntu  'make check'
 
 container:
 	docker build -t makebuntu .
