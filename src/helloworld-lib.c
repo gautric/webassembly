@@ -1,6 +1,7 @@
 
 #include "helloworld-lib.h"
 
+
 #ifdef __EMSCRIPTEN__
     #include <emscripten.h>
 #endif
@@ -14,6 +15,9 @@
 #endif
 int helloworld(const char * name) {
     printf("Call 'helloworld' %s \n", name);
+
+    printf("HELLOWORD_ENV = %s \n", getenv(HELLOWORD_ENV));
+
     return 42;
 }
 
