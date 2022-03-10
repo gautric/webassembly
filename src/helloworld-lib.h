@@ -11,6 +11,8 @@
 extern int helloworld(const char * name);
 
 extern int version();
+
+extern int add(int i);
  
 #endif  // helloWorld_h__
 

@@ -28,6 +28,15 @@ int version() {
   return 42;
 }
 
+
+
+#ifdef __EMSCRIPTEN__
+    EMSCRIPTEN_KEEPALIVE
+#endif
+int add(int i) {
+  return 42 + i;
+}
+
 #ifdef __cplusplus
 }
 #endif

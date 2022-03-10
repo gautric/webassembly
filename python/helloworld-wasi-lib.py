@@ -15,9 +15,11 @@ instance = Instance(module, import_object)
 # export function
 version = instance.exports.version
 helloworld = instance.exports.helloworld
+add = instance.exports.add
 
 # use function
 assert version() == 42
 # Need pass a String
 helloworld(0)
 
+print(add(42))
