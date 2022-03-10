@@ -40,7 +40,7 @@ mkdir:
 	@mkdir -p $(DIST_DIR)
 	@mkdir -p $(BUILD_DIR)
 
-check: staticrun dynamicrun noderun pythonrun wasmtimerun httplib pythonmainrun wasmtimelibrun jsexec
+check: staticrun dynamicrun noderun  wasmtimerun httplib pythonrun pythonmainrun  pythonwasilib wasmtimelibrun jsexec 
 
 clean: 
 	rm -rf *.a *.o *.so *.wasm staticmain dynamicmain main $(BUILD_DIR) $(DIST_DIR)
@@ -80,8 +80,13 @@ pythonrun: dynamiclib
 
 pythonmainrun: dynamiclib
 	@echo "********** RUN python main wasi "
-	@HELLOWORLD_ENV=myvar python3.8 python/wasi-main.py
+	@HELLOWORLD_ENV=myvar python3.8 python/helloworld-wasi-main.py
 	@echo "********** END python main wasi "
+
+pythonwasilib: dynamiclib
+	@echo "********** RUN python wasi lib "
+	@python3.8 python/helloworld-wasi-lib.py
+	@echo "********** END python wasi lib "
 
 wasi: mkdir 
 	@${CLANG} $(SRC_DIR)/helloworld-main.c $(SRC_DIR)/helloworld-lib.c -o $(DIST_DIR)/helloworld-main.wasm
