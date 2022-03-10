@@ -116,11 +116,14 @@ http: httplib
 	python3 -m http.server
 
 jslib: $(SRC_DIR)/helloworld-lib.h $(SRC_DIR)/helloworld-lib.c mkdir
-	@$(EMCC) $(SRC_DIR)/helloworld-lib.c -O3 -s WASM=1  -s MODULARIZE -s EXPORTED_RUNTIME_METHODS=ccall -o helloworld-js/helloworld-lib.js
+	@$(EMCC) $(SRC_DIR)/helloworld-lib.c -O3 -s WASM=1  -s ASSERTIONS=1 --bind -s MODULARIZE -s EXPORTED_RUNTIME_METHODS=ccall -o helloworld-js/helloworld-lib.js
+	@$(EMCC) $(SRC_DIR)/helloworld-lib.c  -s EXPORTED_FUNCTIONS="['_version','_add','_helloworld']" -s EXPORTED_RUNTIME_METHODS="["ccall", "cwrap"]" -o helloworld-js/helloworld-lib-bindonly.js --bind
+
 
 jsexec: jslib
 	@echo "********** RUN node lib "
 	@cd helloworld-js; $(EMSDK_NODE) --no-warnings  --experimental-wasi-unstable-preview1 main.js; cd ..
+	@cd helloworld-js; $(EMSDK_NODE) --no-warnings  --experimental-wasi-unstable-preview1 main-bindonly.js; cd ..
 	@echo "********** END node lib "
 
 #	$(EMCC) $(SRC_DIR)/helloworld-lib.c -s MODULARIZE=1  -s EXPORTED_RUNTIME_METHODS=ccall -o helloworld-lib.js
