@@ -26,6 +26,8 @@ AR = ar
 EMAR = emar rcv
 RANLIB = emranlib
 CFLAGS = -Wall -Wconversion -O3 -fPIC -Wemcc
+CFLAGS = -Wall -Wconversion  -fPIC -Wemcc
+
 #CFLAGS = -Wall -Wconversion -fPIC -Wemcc
 EMCCFLAGS = -Wemcc -s ASSERTIONS=2 -s "EXPORT_NAME=\"helloworld\"" -s MODULARIZE=1 -s DISABLE_EXCEPTION_CATCHING=0 -s NODEJS_CATCH_EXIT=0  -s WASM=1 -s ALLOW_MEMORY_GROWTH=1  -s SIDE_MODULE=1
 EMCCFLAGS = -Wemcc -s MODULARIZE -s ERROR_ON_UNDEFINED_SYMBOLS=0 -s EXPORTED_FUNCTIONS=helloworld -s EXPORT_NAME=helloworld -s EXPORTED_RUNTIME_METHODS=ccall -s DEFAULT_LIBRARY_FUNCS_TO_INCLUDE=helloworld
@@ -90,15 +92,17 @@ wasmtimerun: wasi
 	@echo "********** END wasmtime main "
 
 httplib: $(SRC_DIR)/helloworld-lib.h $(SRC_DIR)/helloworld-lib.c mkdir
-	@$(EMCC) -O3 -s WASM=1 -s -s EXPORTED_RUNTIME_METHODS=ccall,cwrap $(SRC_DIR)/helloworld-lib.c -o $(DIST_DIR)/helloworld-lib.js
+	@$(EMCC)  -s WASM=1 -s -s EXPORTED_RUNTIME_METHODS=ccall,cwrap $(SRC_DIR)/helloworld-lib.c -o $(DIST_DIR)/helloworld-lib.js
 
 http: httplib
 	python3 -m http.server
 
 nodelib: $(SRC_DIR)/helloworld-lib.h $(SRC_DIR)/helloworld-lib.c mkdir
-	$(EMCC) $(SRC_DIR)/helloworld-lib.c -s MODULARIZE=1  -s EXPORTED_RUNTIME_METHODS=ccall -o helloworld-lib.js
+	$(EMCC) $(SRC_DIR)/helloworld-lib.c -O3 -s WASM=1  -s MODULARIZE 	 -s EXPORTED_RUNTIME_METHODS=ccall -o helloworld-js/helloworld-lib.js
+
+#	$(EMCC) $(SRC_DIR)/helloworld-lib.c -s MODULARIZE=1  -s EXPORTED_RUNTIME_METHODS=ccall -o helloworld-lib.js
 #	$(EMSDK_NODE) --no-warnings  --experimental-wasi-unstable-preview1 main-lib.js
-	$(EMCC) -s MAIN_MODULE $(SRC_DIR)/helloworld-lib.c libhelloworld.wasm
+#	$(EMCC) -s MAIN_MODULE $(SRC_DIR)/helloworld-lib.c libhelloworld.wasm
 
 wasibuildlib: $(SRC_DIR)/helloworld-lib.c 
 	${CLANG} -s ENVIRONMENT=node -s WASM=0 $(SRC_DIR)/helloworld-lib.c -s LINKABLE=1 -s EXPORT_ALL=1 -o helloworld-lib.js
@@ -116,7 +120,7 @@ emcc:
 	${EMSDK_NODE} helloworld-main.js
 
 emcc2:
-	${EMCC} test.c  -s LINKABLE=1 -s EXPORT_ALL=1  -o test.js
+	${EMCC} test.c  -s LINKABLE=1 -s EXPORT_ALL=1 -s MODULARIZE=1 -o test.js
 	${EMSDK_NODE} main.js
 
 embedded:

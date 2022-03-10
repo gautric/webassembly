@@ -12,7 +12,6 @@
 #ifdef __EMSCRIPTEN__
     EMSCRIPTEN_KEEPALIVE
 #endif
-
 int helloworld(const char * name) {
     printf("Call 'helloworld' %s \n", name);
     return 42;
@@ -21,7 +20,6 @@ int helloworld(const char * name) {
 #ifdef __EMSCRIPTEN__
     EMSCRIPTEN_KEEPALIVE
 #endif
-
 int version() {
   return 42;
 }
