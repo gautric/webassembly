@@ -93,7 +93,7 @@ wasi: mkdir
 
 noderun: wasi
 	@echo "********** RUN node main "
-	@${EMSDK_NODE} --no-warnings  --experimental-wasi-unstable-preview1 helloworld-wasi.js 
+	@${EMSDK_NODE} --no-warnings  --experimental-wasi-unstable-preview1 helloworld-wasi-js/helloworld-wasi.js 
 	@echo "********** END node main "
 
 wasmtimerun: wasi

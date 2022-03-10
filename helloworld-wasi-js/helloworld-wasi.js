@@ -5,8 +5,7 @@ import { argv, env } from 'process';
 const wasi = new WASI({
   args: argv,
   env: {
-    'HELLOWORLD_ENV': "myEnv"
-
+    'HELLOWORLD_ENV': "env_Passed_WASI"
   },
   preopens: {
     '.': '.'
