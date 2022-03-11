@@ -16,7 +16,7 @@ SRC_DIR=src
 
 ifeq ($(shell uname -s),Darwin)
 	WASI_SDK_PATH=${HOME}/Source/wasm/wasi-sdk-14.0
-	EMSDK=${HOME}/Source/wasm/emsdk
+	EMSDK=${HOME}/Source/emsdk
 endif
 
 CLANG=${WASI_SDK_PATH}/bin/clang --sysroot=${WASI_SDK_PATH}/share/wasi-sysroot
