@@ -93,12 +93,12 @@ wasi: mkdir
 
 noderun: wasi
 	@echo "********** RUN node main "
-	@${EMSDK_NODE} --no-warnings  --experimental-wasi-unstable-preview1 helloworld-wasi-js/helloworld-wasi.js 
+	@${EMSDK_NODE} --no-warnings  --experimental-wasi-unstable-preview1 helloworld-wasi-js/helloworld-wasi.js
 	@echo "********** END node main "
 
 wasmtimerun: wasi
 	@echo "********** RUN wasmtime main "
-	@wasmtime $(DIST_DIR)/helloworld-main.wasm
+	@wasmtime --env HELLOWORLD_ENV=wastime_ENV $(DIST_DIR)/helloworld-main.wasm Marie
 	@echo "********** END wasmtime main "
 
 wasmtimelibrun: 
@@ -170,3 +170,4 @@ wasm: wasmlib mkdir
 wasmlib2: $(SRC_DIR)/helloworld-lib.h $(SRC_DIR)/helloworld-lib.c mkdir
 #	$(EMCC) $(CFLAGS)  helloworld-lib.c -o $(DIST_DIR)/helloworld-lib.js $(EMCCFLAGS)
 	$(EMCC) -O3 -s WASM=1 -s EXPORTED_RUNTIME_METHODS='["cwrap"]' $(SRC_DIR)/helloworld-lib.c -o $(DIST_DIR)/helloworld-lib.js
+
