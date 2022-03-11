@@ -48,18 +48,12 @@ wasi_version = wasi.get_version(module, strict=True)
 # current directory. There it is:
 wasi_env = \
     wasi.StateBuilder('helloworld'). \
-        argument('--test'). \
+        argument('Marie'). \
         environment('HELLOWORLD_ENV', 'helloworld_value'). \
         map_directory('the_host_current_dir', '.'). \
         finalize()
 
-# From the WASI environment, we generate a custom import object. Why?
-# Because WASI is, from the user perspective, a bunch of
-# imports. Consequently `generate_import_object`… generates a
-# pre-configured import object.
-#
-# Do you remember when we said WASI has multiple versions? Well, we
-# need the WASI version here!
+
 import_object = wasi_env.generate_import_object(store, wasi_version)
 
 # Now we can instantiate the module.
