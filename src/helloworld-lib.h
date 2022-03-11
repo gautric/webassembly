@@ -4,15 +4,23 @@
 #ifndef helloWorld_h__
 #define helloWorld_h__
 
+
+#ifdef __EMSCRIPTEN__
+    #include <emscripten.h>
+#else
+    // Provide empty #define  
+    #define EMSCRIPTEN_KEEPALIVE 
+#endif
+
 #define HELLOWORLD_ENV "HELLOWORLD_ENV"
 
-#define export __attribute__( ( visibility( "default" ) ) 
+#define WASM_EXPORT __attribute__((visibility("default")))
 
-extern int helloworld(const char * name);
+EMSCRIPTEN_KEEPALIVE WASM_EXPORT extern int helloworld(const char * name);
 
-extern int version();
+EMSCRIPTEN_KEEPALIVE WASM_EXPORT extern int version();
 
-extern int add(int i);
+EMSCRIPTEN_KEEPALIVE WASM_EXPORT extern int add(int i);
  
 #endif  // helloWorld_h__
 
