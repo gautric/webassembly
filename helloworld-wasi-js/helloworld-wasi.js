@@ -3,7 +3,7 @@ import {WASI} from 'wasi';
 import { argv, env } from 'process';
 
 const wasi = new WASI({
-  args: argv,
+  args: [argv[0], "Marie"],
   env: {
     'HELLOWORLD_ENV': "env_Passed_WASI"
   },
