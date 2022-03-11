@@ -15,7 +15,7 @@ DIST_DIR=dist
 SRC_DIR=src
 
 ifeq ($(shell uname -s),Darwin)
-	WASI_SDK_PATH=${HOME}/Source/wasm/wasi-sdk-14.0
+	WASI_SDK_PATH=${HOME}/Source/wasi-sdk-14.0
 	EMSDK=${HOME}/Source/emsdk
 endif
 
